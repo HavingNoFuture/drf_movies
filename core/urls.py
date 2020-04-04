@@ -22,7 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
-    path('api/v1/', include('movies.urls') )
+    path('api/v1/', include('movies.urls')),
 ]
 
 if settings.DEBUG:
