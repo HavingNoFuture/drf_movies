@@ -17,42 +17,6 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
-
-# Presave signals
-
-def post_save_slug_film(sender, instance, *args, **kwargs):
-    """
-    Функция-генератор слага на основе названия.
-    Использует сигнал postsave к базе данных.
-    Пытается создать слаг-транслит русского названия, иначе делать слаг из английского.
-    Обязательные требования: у модели должны быть поля title и slug.
-    Примеры: Терминатор(id:1) -> 1-terminator
-    Terminator 2(id:2) -> 2-terminator
-    """
-    if not instance.slug:
-        try:
-            instance.slug = f"{instance.pk}-{slugify(translit(instance.title, reversed=True))}"
-        except:
-            instance.slug = f"{instance.pk}-{slugify(instance.title)}"
-        instance.save()
-
-
-def post_save_slug_person(sender, instance, *args, **kwargs):
-    """
-    Функция-генератор слага на основе имени и фамилии.
-    Использует сигнал postsave к базе данных.
-    Пытается создать слаг-транслит русских имени и фамилии, иначе делает слаг из английского.
-    Обязательные требования: у модели должны быть поля first_name, last_name и slug.
-    Пример: Арнольд Шварцнеггер(id:1) -> 1-arnold-shvartsnegger
-    """
-    if not instance.slug:
-        try:
-            instance.slug = f"{instance.pk}-" \
-                f"{slugify(translit(f'{instance.first_name} {instance.last_name}', reversed=True))}"
-        except:
-            instance.slug = f"{instance.pk}-{slugify(f'{instance.first_name} {instance.last_name}')}"
-        instance.save()
-
 # Models
 
 class Country(models.Model):
@@ -78,6 +42,22 @@ class Person(models.Model):
     image = models.ImageField("Изображение", upload_to="actors/")
     slug = models.SlugField(blank=True)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        """
+        Пытаемся создать слаг-транслит русских имени и фамилии, иначе делает слаг из английского.
+        Обязательные требования: у модели должны быть поля first_name, last_name и slug.
+        Пример: Арнольд Шварцнеггер(id:1) -> 1-arnold-shvartsnegger
+        """
+        if not self.slug:
+            try:
+                self.slug = f"{self.pk}-" \
+                    f"{slugify(translit(f'{self.first_name} {self.last_name}', reversed=True))}"
+            except:
+                self.slug = f"{self.pk}-{slugify(f'{self.first_name} {self.last_name}')}"
+            self.save(update_fields=("slug",))
+
     def get_age(self):
         if self.date_of_death:
             return (self.date_of_death - self.date_of_birthday).days // 365
@@ -98,9 +78,6 @@ class Person(models.Model):
     class Meta:
         verbose_name = "Актеры и режиссеры"
         verbose_name_plural = "Актеры и режиссеры"
-
-
-post_save.connect(post_save_slug_person, sender=Person)
 
 
 class Genre(models.Model):
@@ -159,6 +136,22 @@ class Movie(models.Model):
     draft = models.BooleanField("Черновик", default=False)
     slug = models.SlugField(blank=True)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        """
+        Пытаемся создать слаг-транслит русского названия, иначе делать слаг из английского.
+        Обязательные требования: у модели должны быть поля title и slug.
+        Примеры: Терминатор(id:1) -> 1-terminator
+        Terminator 2(id:2) -> 2-terminator
+        """
+        if not self.slug:
+            try:
+                self.slug = f"{self.pk}-{slugify(translit(self.title, reversed=True))}"
+            except:
+                self.slug = f"{self.pk}-{slugify(self.title)}"
+            self.save(update_fields=("slug",))
+
     def __str__(self):
         return self.title
 
@@ -182,9 +175,6 @@ class Movie(models.Model):
     class Meta:
         verbose_name = "Фильм"
         verbose_name_plural = "Фильмы"
-
-
-post_save.connect(post_save_slug_film, sender=Movie)
 
 
 class MovieShots(models.Model):
