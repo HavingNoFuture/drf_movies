@@ -2,7 +2,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Movie
-from .serializers import MovieListSerializer, MovieDetailSerializer
+from .serializers import MovieListSerializer, MovieDetailSerializer, ReviewCreateSerializer
+
 
 
 class MovieListView(APIView):
@@ -21,3 +22,13 @@ class MovieDetailView(APIView):
         movie = Movie.objects.get(id=pk, draft=False)
         serializer = MovieDetailSerializer(movie)
         return Response(serializer.data)
+
+
+class ReviewCreateView(APIView):
+    """Вывод отзывов к фильму"""
+
+    def post(self, request):
+        review = ReviewCreateSerializer(data=request.data)
+        if review.is_valid():
+            review.save()
+        return Response(status=201)

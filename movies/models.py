@@ -182,7 +182,7 @@ class MovieShots(models.Model):
     title = models.CharField("Заголовок", max_length=120)
     description = models.TextField("Описание")
     image = models.ImageField("Изображение", upload_to="movie_shots/")
-    movie = models.ForeignKey(Movie, verbose_name="Фильм", on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, verbose_name="Фильм", on_delete=models.CASCADE, related_name="movieshots")
 
     def __str__(self):
         return self.title
@@ -209,7 +209,7 @@ class Rating(models.Model):
     """Рейтинг"""
     ip = models.CharField("IP адрес", max_length=90)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, verbose_name="фильм")
-    star = models.ForeignKey(RatingStars, on_delete=models.CASCADE, verbose_name="звезда")
+    star = models.ForeignKey(RatingStars, on_delete=models.CASCADE, verbose_name="звезда", related_name="ratings")
 
     def __str__(self):
         return f"{self.movie} - {self.star}"
@@ -228,7 +228,7 @@ class Review(models.Model):
     parent = models.ForeignKey(
         "self", verbose_name="Родитель", on_delete=models.SET_NULL, null=True, blank=True
     )
-    movie = models.ForeignKey(Movie, verbose_name="фильм", on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, verbose_name="фильм", on_delete=models.CASCADE, related_name="reviews")
 
     def __str__(self):
         return f"{self.movie} - {self.name}"
