@@ -1,23 +1,12 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
-from django.db.models.signals import post_save
 
 from datetime import date
 
 from transliterate import translit
 
-
-def get_client_ip(request):
-    """Возвращает ip пользователя через запрос"""
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
-
-# Models
+from .services import get_client_ip_from_request
 
 class Country(models.Model):
     name = models.CharField("Имя", max_length=90)
@@ -170,7 +159,7 @@ class Movie(models.Model):
         return "{0:.2f}".format(float(self.get_average_rating()))
 
     def get_current_user_rating(self, request):
-        return self.rating_set.get(ip=get_client_ip(request))
+        return self.rating_set.get(ip=get_client_ip_from_request(request))
 
     class Meta:
         verbose_name = "Фильм"

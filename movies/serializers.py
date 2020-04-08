@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Movie, Review
+from .models import Movie, Review, Rating
 
 
 class MovieListSerializer(serializers.ModelSerializer):
@@ -10,12 +10,6 @@ class MovieListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = ("title", "tagline", "category")
-
-    def create(self, validated_data):
-        pass
-
-    def update(self, instance, validated_data):
-        pass
 
 
 class ReviewCreateSerializer(serializers.ModelSerializer):
@@ -50,6 +44,22 @@ class ReviewSerializer(serializers.ModelSerializer):
         list_serializer_class = FilterReviewListSerializer
         model = Review
         fields = ("name", "text", "children")
+
+
+class RatingCreateSerializer(serializers.ModelSerializer):
+    """Добавление рейтинга пользователем."""
+
+    class Meta:
+        model = Rating
+        fields = ("star", "movie")
+
+    def create(self, validated_data):
+        rating = Rating.objects.update_or_create(
+            ip=validated_data.get("ip", None),
+            movie=validated_data.get("movie", None),
+            defaults={"star": validated_data.get("star", None)}
+        )
+        return rating
 
 
 class MovieDetailSerializer(serializers.ModelSerializer):
