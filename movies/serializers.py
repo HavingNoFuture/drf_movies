@@ -11,6 +11,12 @@ class MovieListSerializer(serializers.ModelSerializer):
         model = Movie
         fields = ("title", "tagline", "category")
 
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
+
 
 class ReviewCreateSerializer(serializers.ModelSerializer):
     """Добавлене отзыва."""
@@ -20,12 +26,30 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class RecursiveSerializer(serializers.Serializer):
+    """Рекурсивный вывод дочерних отзывов."""
+
+    def to_representation(self, value):
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
+
+
+class FilterReviewListSerializer(serializers.ListSerializer):
+    """Фильтрует отзывы. Оставляет только родительские."""
+
+    def to_representation(self, data):
+        data = data.filter(parent=None)
+        return super().to_representation(data)
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     """Вывод отзыва."""
+    children = RecursiveSerializer(many=True)
 
     class Meta:
+        list_serializer_class = FilterReviewListSerializer
         model = Review
-        fields = ("name", "text", "parent")
+        fields = ("name", "text", "children")
 
 
 class MovieDetailSerializer(serializers.ModelSerializer):
