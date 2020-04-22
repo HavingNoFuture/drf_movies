@@ -1,14 +1,19 @@
-from django.contrib.auth import get_user_model
 from django.db import models
+from rest_framework import generics
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Movie
-from .serializers import MovieListSerializer, MovieDetailSerializer, ReviewCreateSerializer, RatingCreateSerializer
+from .models import Movie, Person
+from .serializers import (
+    MovieListSerializer,
+    MovieDetailSerializer,
+    ReviewCreateSerializer,
+    RatingCreateSerializer,
+    PersonListSerializer,
+    PersonDetailSerializer,
+)
 from .services import get_client_ip_from_request
-
-User = get_user_model()
 
 
 class MovieListView(APIView):
@@ -33,6 +38,20 @@ class MovieDetailView(APIView):
         return Response(serializer.data)
 
 
+class PersonListView(generics.ListAPIView):
+    """Вывод списка персоналий"""
+
+    queryset = Person.objects.all()
+    serializer_class = PersonListSerializer
+
+
+class PersonDetailView(generics.RetrieveAPIView):
+    """Вывод деталей персоналия"""
+
+    queryset = Person.objects.all()
+    serializer_class = PersonDetailSerializer
+
+
 class ReviewCreateView(APIView):
     """Вывод отзывов к фильму"""
 
@@ -52,6 +71,3 @@ class RatingCreateView(APIView):
             serializer.save(ip=get_client_ip_from_request(request))
             return Response(status=201)
         return Response(status=400)
-
-
-from django.contrib.auth import get_user_model

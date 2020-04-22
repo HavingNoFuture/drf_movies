@@ -1,17 +1,31 @@
 from rest_framework import serializers
 
-from .models import Movie, Review, Rating
+from .models import Movie, Review, Rating, Person, Country
 
 
-class MovieListSerializer(serializers.ModelSerializer):
-    """Список фильмов"""
-    category = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    rating_user = serializers.BooleanField()
-    average_rating = serializers.FloatField()
+class CountryListSerializer(serializers.ModelSerializer):
+    """Вывод страны"""
 
     class Meta:
-        model = Movie
-        fields = ("id", "title", "tagline", "category", "rating_user", "average_rating")
+        model = Country
+        fields = ('name', )
+
+
+class PersonListSerializer(serializers.ModelSerializer):
+    """Описание актера и режиссера"""
+
+    class Meta:
+        model = Person
+        fields = ('id', 'first_name', 'last_name', 'image')
+
+
+class PersonDetailSerializer(serializers.ModelSerializer):
+    """Описание актера и режиссера"""
+    countries = CountryListSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Person
+        fields = '__all__'
 
 
 class ReviewCreateSerializer(serializers.ModelSerializer):
@@ -64,15 +78,26 @@ class RatingCreateSerializer(serializers.ModelSerializer):
         return rating
 
 
+class MovieListSerializer(serializers.ModelSerializer):
+    """Список фильмов"""
+    category = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    rating_user = serializers.BooleanField()
+    average_rating = serializers.FloatField()
+
+    class Meta:
+        model = Movie
+        fields = ("id", "title", "tagline", "category", "rating_user", "average_rating")
+
+
 class MovieDetailSerializer(serializers.ModelSerializer):
     """Подробности фильма"""
     category = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    directors = serializers.SlugRelatedField(slug_field="first_name", read_only=True, many=True)
-    actors = serializers.SlugRelatedField(slug_field="first_name", read_only=True, many=True)
+    directors = PersonListSerializer(read_only=True, many=True)
+    actors = PersonListSerializer(read_only=True, many=True)
     genres = serializers.SlugRelatedField(slug_field="name", read_only=True, many=True)
-    countries = serializers.SlugRelatedField(slug_field="name", read_only=True, many=True)
+    countries = CountryListSerializer(many=True)
     reviews = ReviewSerializer(many=True)
 
     class Meta:
         model = Movie
-        exclude = ("draft", )
+        exclude = ("draft",)

@@ -10,6 +10,8 @@ urlpatterns = [
     path('movies/<int:pk>', views.MovieDetailView.as_view()),
     path('review/', views.ReviewCreateView.as_view()),
     path('rating/', views.RatingCreateView.as_view()),
+    path('persons/', views.PersonListView.as_view()),
+    path('persons/<int:pk>', views.PersonDetailView.as_view()),
     path('openapi', get_schema_view(
         title="drf movies",
         description="API for all things …",
