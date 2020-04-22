@@ -6,10 +6,12 @@ from .models import Movie, Review, Rating
 class MovieListSerializer(serializers.ModelSerializer):
     """Список фильмов"""
     category = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    rating_user = serializers.BooleanField()
+    average_rating = serializers.FloatField()
 
     class Meta:
         model = Movie
-        fields = ("title", "tagline", "category")
+        fields = ("id", "title", "tagline", "category", "rating_user", "average_rating")
 
 
 class ReviewCreateSerializer(serializers.ModelSerializer):

@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
-from rest_framework.fields import ReadOnlyField
+from django.db import models
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -14,9 +15,12 @@ class MovieListView(APIView):
     """Вывод списка фильмов"""
 
     def get(self, request):
-        movies = Movie.objects.filter(draft=False)
+        movies = Movie.objects.filter(draft=False).annotate(
+            rating_user=models.Count("ratings", filter=models.Q(ratings__ip=get_client_ip_from_request(request)))
+        ).annotate(
+            average_rating=models.Sum(models.F('ratings__star')) / models.Count(models.F('ratings'))
+        )
         serializer = MovieListSerializer(movies, many=True)
-        print(Movie.objects.filter(category__name='movies'))
         return Response(serializer.data)
 
 
