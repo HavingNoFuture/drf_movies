@@ -9,3 +9,6 @@ sqlparse==0.3.1
 django-ckeditor==5.9.0
 django-js-asset==1.2.2
 transliterate==1.10.2
+pyyaml==5.3.1
+uritemplate==3.0.1
+
