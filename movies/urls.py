@@ -1,8 +1,6 @@
-from django.urls import path
+from django.urls import path, include
 
-from rest_framework.schemas import get_schema_view
-from django.views.generic import TemplateView
-
+from .yasg import urlpatterns as doc_urls
 from . import views
 
 urlpatterns = [
@@ -12,13 +10,11 @@ urlpatterns = [
     path('rating/', views.RatingCreateView.as_view()),
     path('persons/', views.PersonListView.as_view()),
     path('persons/<int:pk>', views.PersonDetailView.as_view()),
-    path('openapi', get_schema_view(
-        title="drf movies",
-        description="API for all things …",
-        version="1.0.0"
-    ), name='openapi-schema'),
-    path('swagger-ui/', TemplateView.as_view(
-        template_name='swagger-ui.html',
-        extra_context={'schema_url': 'openapi-schema'}
-    ), name='swagger-ui'),
+    path('api-auth/', include('rest_framework.urls')),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.authtoken')),
 ]
+
+urlpatterns += doc_urls
+
+
