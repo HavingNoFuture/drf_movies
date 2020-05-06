@@ -1,27 +1,32 @@
 from django.db import models
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions
+from rest_framework import permissions, viewsets
 
-from .models import Movie, Person
-from .serializers import (
-    MovieListSerializer,
-    MovieDetailSerializer,
-    ReviewCreateSerializer,
-    RatingCreateSerializer,
-    PersonListSerializer,
-    PersonDetailSerializer,
-)
+from .models import Movie, Person, Review, Rating
+from . import serializers
 from .services import get_client_ip_from_request
 from .filters import MovieFilter
+from .permissions import IsEmailOwner, IsIpOwner
 
 
-class MovieListView(generics.ListAPIView):
-    """Вывод списка фильмов"""
-    serializer_class = MovieListSerializer
-    filter_backends = (DjangoFilterBackend, )
+class MovieViewSet(viewsets.ModelViewSet):
+    """Вьюсет для отображения фильмов"""
+    queryset = Movie.objects.filter(draft=False)
+    serializer_class = serializers.MovieListSerializer
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = MovieFilter
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_serializer_class(self):
+        if self.action in ('retrieve', 'update', 'partial_update', 'delete'):
+            return serializers.MovieDetailSerializer
+        return self.serializer_class
+
+    def get_permissions(self):
+        if self.action in ('update', 'partial_update', 'delete'):
+            self.permission_classes = (permissions.IsAdminUser,)
+        return [permission() for permission in self.permission_classes]
 
     def get_queryset(self):
         queryset = Movie.objects.filter(draft=False).annotate(
@@ -32,37 +37,52 @@ class MovieListView(generics.ListAPIView):
         return queryset
 
 
-class MovieDetailView(generics.RetrieveAPIView):
-    """Вывод подробностей фильмов"""
-    queryset = Movie.objects.filter(draft=False)
-    serializer_class = MovieDetailSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
-
-class PersonListView(generics.ListAPIView):
-    """Вывод списка персоналий"""
+class PersonViewSet(viewsets.ModelViewSet):
+    """Вьюсет для отображения персоналий"""
     queryset = Person.objects.all()
-    serializer_class = PersonListSerializer
+    serializer_class = serializers.PersonListSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+    def get_serializer_class(self):
+        if self.action in ('retrieve', 'update', 'partial_update', 'delete'):
+            return serializers.PersonDetailSerializer
+        return self.serializer_class
 
-class PersonDetailView(generics.RetrieveAPIView):
-    """Вывод деталей персоналия"""
-    queryset = Person.objects.all()
-    serializer_class = PersonDetailSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    def get_permissions(self):
+        if self.action in ('update', 'partial_update', 'delete'):
+            self.permission_classes = (permissions.IsAdminUser,)
+        return [permission() for permission in self.permission_classes]
 
 
-class ReviewCreateView(generics.CreateAPIView):
-    """Создание  к фильму"""
-    serializer_class = ReviewCreateSerializer
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Вьюсет для отображения отзывов"""
+    queryset = Review.objects.all()
+    serializer_class = serializers.ReviewSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    def get_serializer_class(self):
+        if self.action in ('retrieve', 'update', 'partial_update', 'delete'):
+            return serializers.ReviewCreateSerializer
+        return self.serializer_class
 
-class RatingCreateView(generics.CreateAPIView):
-    """Добавление рейтинга к фильму."""
-    serializer_class = RatingCreateSerializer
+    def get_permissions(self):
+        if self.action in ('update', 'partial_update'):
+            self.permission_classes = (IsEmailOwner,)
+        elif self.action == 'delete':
+            self.permission_classes = (IsEmailOwner, permissions.IsAdmin)
+        return [permission() for permission in self.permission_classes]
+
+
+class RatingViewSet(viewsets.ModelViewSet):
+    """Вьюсет для отображения рейтингов"""
+    queryset = Rating.objects.all()
+    serializer_class = serializers.RatingSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
         serializer.save(ip=get_client_ip_from_request(self.request))
+
+    def get_permissions(self):
+        if self.action in ('update', 'partial_update', 'delete'):
+            self.permission_classes = (IsIpOwner,)
+        return [permission() for permission in self.permission_classes]

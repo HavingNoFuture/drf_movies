@@ -43,7 +43,6 @@ class RecursiveSerializer(serializers.Serializer):
         serializer = self.parent.parent.__class__(value, context=self.context)
         return serializer.data
 
-
 class FilterReviewListSerializer(serializers.ListSerializer):
     """Фильтрует отзывы. Оставляет только родительские."""
 
@@ -62,7 +61,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ("name", "text", "children")
 
 
-class RatingCreateSerializer(serializers.ModelSerializer):
+class RatingSerializer(serializers.ModelSerializer):
     """Добавление рейтинга пользователем."""
 
     class Meta:

@@ -1,20 +1,26 @@
 from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
 from .yasg import urlpatterns as doc_urls
 from . import views
 
+
+router = DefaultRouter()
+router.register('movies', views.MovieViewSet)
+router.register('persons', views.PersonViewSet)
+router.register('reviews', views.ReviewViewSet)
+router.register('ratings', views.RatingViewSet)
+
+
 urlpatterns = [
-    path('movies/', views.MovieListView.as_view()),
-    path('movies/<int:pk>', views.MovieDetailView.as_view()),
-    path('review/', views.ReviewCreateView.as_view()),
-    path('rating/', views.RatingCreateView.as_view()),
-    path('persons/', views.PersonListView.as_view()),
-    path('persons/<int:pk>', views.PersonDetailView.as_view()),
     path('api-auth/', include('rest_framework.urls')),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
 ]
 
+urlpatterns += router.urls
 urlpatterns += doc_urls
+
+
 
 
